@@ -7,7 +7,9 @@ package io.pleo.antaeus.rest
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.path
+import io.pleo.antaeus.core.exceptions.BusinessRuleException
 import io.pleo.antaeus.core.exceptions.EntityNotFoundException
+import io.pleo.antaeus.core.services.BillingService
 import io.pleo.antaeus.core.services.CustomerService
 import io.pleo.antaeus.core.services.InvoiceService
 import mu.KotlinLogging
@@ -17,7 +19,8 @@ private val thisFile: () -> Unit = {}
 
 class AntaeusRest(
     private val invoiceService: InvoiceService,
-    private val customerService: CustomerService
+    private val customerService: CustomerService,
+    private val billingService: BillingService
 ) : Runnable {
 
     override fun run() {
@@ -76,6 +79,23 @@ class AntaeusRest(
                         // URL: /rest/v1/customers/{:id}
                         get(":id") {
                             it.json(customerService.fetch(it.pathParam("id").toInt()))
+                        }
+                    }
+
+                    path("charge") {
+                        // URL: /rest/V1/charge
+                        get {
+                            // Will return an empty list if all prescriptions where successfully paid
+                            try {
+                                // Throw NPE if or any reason the value is null. This means something went wrong
+                                val result = billingService.chargeCustomers(true)!!
+                                it.json(result)
+                            } catch (e: BusinessRuleException) {
+                                it.res.sendError(
+                                    403,
+                                    "Should not charge on days other than the first of the month"
+                                )
+                            }
                         }
                     }
                 }
