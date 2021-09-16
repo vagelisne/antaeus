@@ -83,11 +83,11 @@ class AntaeusRest(
                     }
 
                     path("charge") {
-                        // URL: /rest/V1/charge
+                        // URL: /rest/v1/charge
                         get {
                             // Will return an empty list if all prescriptions where successfully paid
                             try {
-                                // Throw NPE if or any reason the value is null. This means something went wrong
+                                // Throw NPE if for any reason the value is null. NULL is returned when the method is called by the scheduler
                                 val result = billingService.chargeCustomers(true)!!
                                 it.json(result)
                             } catch (e: BusinessRuleException) {

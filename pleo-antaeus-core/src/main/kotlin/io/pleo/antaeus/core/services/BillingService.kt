@@ -64,6 +64,12 @@ class BillingService(
             val customer = customerService.fetch(invoice.customerId);
             if (invoice.amount.currency != customer.currency) {
                 invoiceService.changeAmount(invoice.id, invoice.amount.convertTo(customer.currency))
+                logger.info(
+                    "Changed currency for invoice: {0} from {1} to {2}",
+                    invoice.id,
+                    invoice.amount.currency,
+                    customer.currency
+                )
             }
             paymentProvider.charge(invoiceService.fetch(invoice.id))
         } catch (e: CustomerNotFoundException) {
